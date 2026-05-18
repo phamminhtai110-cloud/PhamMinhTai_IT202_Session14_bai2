@@ -2,6 +2,65 @@
 
 # [Vận dụng nâng cao] Kiểm soát giao dịch cấp phát thuốc
 
+## 1. Phân tích yêu cầu
+
+### Dữ liệu đầu vào
+- `p_patient_id` : Mã bệnh nhân
+- `p_medicine_id` : Mã thuốc
+- `p_quantity` : Số lượng cấp phát
+
+### Dữ liệu đầu ra
+- `p_message` : Thông báo trạng thái xử lý
+
+### Loại tham số phù hợp
+- `IN` : dùng để nhận dữ liệu đầu vào
+- `OUT` : dùng để trả về thông báo trạng thái
+
+---
+
+# 2. Giải pháp xử lý
+
+Hệ thống cần sử dụng `Transaction` để đảm bảo:
+
+- Nếu cấp phát hợp lệ:
+  - Trừ kho thuốc
+  - Cộng công nợ
+  - `COMMIT`
+
+- Nếu tồn kho không đủ:
+  - Không cập nhật dữ liệu
+  - `ROLLBACK`
+  - Trả thông báo lỗi
+
+---
+
+# 3. Các bước thực hiện
+
+### Bước 1
+Kiểm tra số lượng tồn kho và giá thuốc.
+
+### Bước 2
+So sánh tồn kho với số lượng yêu cầu.
+
+### Bước 3
+Nếu không đủ:
+- Rollback
+- Trả thông báo:
+  - `Loi: So luong ton kho khong du`
+
+### Bước 4
+Nếu đủ:
+- Trừ tồn kho
+- Tính tổng tiền thuốc
+- Cộng công nợ bệnh nhân
+- Commit transaction
+- Trả thông báo:
+  - `Da cap phat thanh cong`
+
+---
+
+# 4. Triển khai mã nguồn
+
 ```sql
 USE RikkeiClinicDB;
 
@@ -61,27 +120,3 @@ BEGIN
 END //
 
 DELIMITER ;
-
-SELECT * FROM Medicines;
-
-SELECT * FROM Patient_Invoices;
-
-SET @message = '';
-
-CALL DispenseMedicine(1, 1, 10, @message);
-
-SELECT @message AS Result;
-
-SELECT * FROM Medicines WHERE medicine_id = 1;
-
-SELECT * FROM Patient_Invoices WHERE patient_id = 1;
-
-SET @message = '';
-
-CALL DispenseMedicine(1, 2, 10, @message);
-
-SELECT @message AS Result;
-
-SELECT * FROM Medicines WHERE medicine_id = 2;
-
-SELECT * FROM Patient_Invoices WHERE patient_id = 1;
